@@ -78,7 +78,7 @@ func TestList(t *testing.T) {
 				status, http.StatusOK)
 		}
 	} else {
-		expected := `[{"id":36,"name":"burak3","email":"testemail2@gmail.com","password":""},{"id":38,"name":"burak2","email":"testemail7@gmail.com","password":""},{"id":34,"name":"burak3","email":"testemail77@gmail.com","password":""}]
+		expected := `[{"id":4,"name":"The Lord Of The Rings","description":"desc","typ":"fantasy"},{"id":5,"name":"Harry Potter","description":"desc","typ":"fantasy"}]
 `
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
@@ -94,7 +94,7 @@ func TestCreate(t *testing.T) {
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
-		Database: "rollic",
+		Database: "soft-robotics",
 		Username: "postgres",
 		Password: "tayitkan",
 		SSLMode:  "disable",
@@ -115,9 +115,9 @@ func TestCreate(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	var jsonStr = []byte(`{"name":"burak2","email":"testemail7@gmail.com","password":"testbrk"}`)
+	var jsonStr = []byte(`{"name":"Warrior","description":"desc","typ":"action"}`)
 
-	req, err := http.NewRequest("POST", "/api/Movies", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestCreate(t *testing.T) {
 					rr.Body.String(), expected)
 			}
 		} else if status == http.StatusInternalServerError {
-			expected := `{"error": "Internal server error"}
+			expected := `{"error": "server error"}
 `
 			if rr.Body.String() != expected {
 				t.Errorf("handler returned unexpected body: got %v want %v",
@@ -166,7 +166,7 @@ func TestCreate(t *testing.T) {
 			errors.New("get id error.")
 		}
 
-		expected := fmt.Sprintf(`{"id":%d,"name":"burak2","email":"testemail7@gmail.com"}
+		expected := fmt.Sprintf(`{"id":%d,"name":"Warrior","description":"desc","typ":"action"}
 `, id)
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
@@ -181,7 +181,7 @@ func TestGet(t *testing.T) {
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
-		Database: "rollic",
+		Database: "soft-robotics",
 		Username: "postgres",
 		Password: "tayitkan",
 		SSLMode:  "disable",
@@ -202,12 +202,12 @@ func TestGet(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	req, err := http.NewRequest("GET", "/api/Movie", nil)
+	req, err := http.NewRequest("GET", "/api/movie", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	q := req.URL.Query()
-	q.Add("id", "22")
+	q.Add("id", "4")
 	req.URL.RawQuery = q.Encode()
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.MovieGet)
@@ -246,7 +246,7 @@ func TestGet(t *testing.T) {
 				status, http.StatusOK)
 		}
 	} else {
-		expected := `{"id":22,"name":"burak","email":"testemail@gmail.com"}
+		expected := `{"id":4,"name":"The Lord Of The Rings","description":"desc","typ":"fantasy"}
 `
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
@@ -262,7 +262,7 @@ func TestDelete(t *testing.T) {
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
-		Database: "rollic",
+		Database: "soft-robotics",
 		Username: "postgres",
 		Password: "tayitkan",
 		SSLMode:  "disable",
@@ -283,12 +283,12 @@ func TestDelete(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	req, err := http.NewRequest("DELETE", "/api/Movies", nil)
+	req, err := http.NewRequest("DELETE", "/api/movie", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	q := req.URL.Query()
-	q.Add("id", "33")
+	q.Add("id", "4")
 	req.URL.RawQuery = q.Encode()
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.MovieDelete)
@@ -329,7 +329,7 @@ func TestDelete(t *testing.T) {
 
 	} else {
 		// Check the response body is what we expect.
-		expected := `"ok"
+		expected := `"Movie deleted"
 `
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
@@ -344,7 +344,7 @@ func TestUpdate(t *testing.T) {
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
-		Database: "rollic",
+		Database: "soft-robotics",
 		Username: "postgres",
 		Password: "tayitkan",
 		SSLMode:  "disable",
@@ -365,14 +365,14 @@ func TestUpdate(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	var jsonStr = []byte(`{"name":"burak3","email":"testemail77@gmail.com","password":"testbrk"}`)
+	var jsonStr = []byte(`{"name":"TestMovieUpdatedName","description":"desc","typ":"fantasy"}`)
 
-	req, err := http.NewRequest("PATCH", "/api/Movies", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("PATCH", "/api/movie", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
 	q := req.URL.Query()
-	q.Add("id", "34")
+	q.Add("id", "4")
 	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Content-Type", "application/json")
@@ -413,7 +413,7 @@ func TestUpdate(t *testing.T) {
 				status, http.StatusOK)
 		}
 	} else {
-		expected := fmt.Sprintf(`{"id":34,"name":"burak3","email":"testemail77@gmail.com"}
+		expected := fmt.Sprintf(`{"name":"TestMovieUpdatedName","description":"desc","typ":"fantasy"}
 `)
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
