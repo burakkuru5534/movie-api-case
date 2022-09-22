@@ -62,10 +62,6 @@ func createSysUsr(data *model.RegisterRequest) error {
 	var err error
 	qs := "insert into sysusr (code, full_name, email, upass) values ($1, $2, $3, $4) returning id"
 
-	data.Password, err = helper.HashPasswd(data.Password)
-	if err != nil {
-		return err
-	}
 	err = helper.App.DB.QueryRowx(qs, data.FirstName+"."+data.LastName, data.FirstName+" "+data.LastName, data.Email, data.Password).Scan(&data.ID)
 	if err != nil {
 		return err

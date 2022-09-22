@@ -97,6 +97,16 @@ func CheckPass(hash string, password string) bool {
 	return true
 }
 
+func CheckPassBasic(dbPass string, password string) bool {
+
+	if dbPass == password {
+		return true
+	} else {
+		return false
+
+	}
+}
+
 func HashPasswd(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {

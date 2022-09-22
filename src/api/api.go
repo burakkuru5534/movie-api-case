@@ -25,7 +25,7 @@ func MovieCreate(w http.ResponseWriter, r *http.Request) {
 		switch e := dberr.(type) {
 		case *dberror.Error:
 			if e.Code == "23505" {
-				http.Error(w, "{\"error\": \"Movie with that email already exists\"}", http.StatusForbidden)
+				http.Error(w, "{\"error\": \"Movie with that name already exists\"}", http.StatusForbidden)
 				return
 			}
 		}

@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+
 	helper.InitConf()
 
 	conInfo := helper.PgConnectionInfo{
@@ -21,7 +22,7 @@ func main() {
 		SSLMode:  "disable",
 	}
 
-	helper.Conf.Auth = auth.NewAuth(helper.Conf.JwtSecret, false)
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
 
 	db, err := helper.NewPgSqlxDbHandle(conInfo, 10)
 	if err != nil {

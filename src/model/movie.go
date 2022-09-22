@@ -54,7 +54,7 @@ func (m *Movie) Get(id int64) error {
 
 func (m *Movie) GetAll() ([]Movie, error) {
 
-	rows, err := helper.App.DB.Query("SELECT id,name,description FROM movie")
+	rows, err := helper.App.DB.Query("SELECT id,name,description,typ FROM movie")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (m *Movie) GetAll() ([]Movie, error) {
 	// Loop through rows, using Scan to assign column data to struct fields.
 	for rows.Next() {
 		var movie Movie
-		if err := rows.Scan(&movie.ID, &movie.Name, &movie.Description); err != nil {
+		if err := rows.Scan(&movie.ID, &movie.Name, &movie.Description, &movie.Typ); err != nil {
 			return movies, err
 		}
 		movies = append(movies, movie)

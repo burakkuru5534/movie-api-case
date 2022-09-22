@@ -43,7 +43,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// compare password hashes
 	loginResult := helper.CheckPass(*upassFromDb, loginInfo.Password)
 	if !loginResult {
-
 		http.Error(w, "{\"error\": \"Bad request\"}", http.StatusBadRequest)
 		return
 	}
