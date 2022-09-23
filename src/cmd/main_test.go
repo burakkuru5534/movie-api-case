@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/burakkuru5534/src/api"
+	"github.com/burakkuru5534/src/api/sys"
 	"github.com/burakkuru5534/src/helper"
 	"net/http"
 	"net/http/httptest"
@@ -37,7 +39,7 @@ func TestList(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	req, err := http.NewRequest("GET", "/api/Movies", nil)
+	req, err := http.NewRequest("GET", "/api/movies", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,13 +117,41 @@ func TestCreate(t *testing.T) {
 		errors.New("init app error.")
 	}
 
-	var jsonStr = []byte(`{"name":"Warrior","description":"desc","typ":"action"}`)
+	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
+	reqLogin, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStrForLogin))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqLogin.Header.Set("Content-Type", "application/json")
+
+	var jsonStr = []byte(`{"name":"MYTESTMOVIE","description":"desc","typ":"action"}`)
 
 	req, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	rrLogin := httptest.NewRecorder()
+	handlerLogin := http.HandlerFunc(sys.Login)
+	handlerLogin.ServeHTTP(rrLogin, req)
+	var respStruct struct {
+		UserID       int64
+		UserName     string
+		UserEmail    string
+		UserFullName string
+		AccessToken  string
+	}
+
+	err = json.Unmarshal(rrLogin.Body.Bytes(), &respStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a Bearer string by appending string access token
+	var bearer = "Bearer " + respStruct.AccessToken
+	// add authorization header to the req
+	req.Header.Add("Authorization", bearer)
+
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.MovieCreate)
 	handler.ServeHTTP(rr, req)
@@ -161,12 +191,12 @@ func TestCreate(t *testing.T) {
 	} else {
 		var id int64
 
-		err = db.Get(&id, "SELECT id from usr order by id desc limit 1")
+		err = db.Get(&id, "SELECT id from movie order by id desc limit 1")
 		if err != nil {
 			errors.New("get id error.")
 		}
 
-		expected := fmt.Sprintf(`{"id":%d,"name":"Warrior","description":"desc","typ":"action"}
+		expected := fmt.Sprintf(`{"id":%d,"name":"MYTESTMOVIE","description":"desc","typ":"action"}
 `, id)
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
