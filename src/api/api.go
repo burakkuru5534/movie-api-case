@@ -190,8 +190,16 @@ func MovieGet(w http.ResponseWriter, r *http.Request) {
 func MovieList(w http.ResponseWriter, r *http.Request) {
 
 	var Movie model.Movie
+	limit := helper.StrToInt64(r.URL.Query().Get("limit"))
+	offset := helper.StrToInt64(r.URL.Query().Get("offset"))
 
-	MovieList, err := Movie.GetAll()
+	if limit == 0 {
+		limit = 10
+	}
+	if offset == 0 {
+		offset = 0
+	}
+	MovieList, err := Movie.GetAll(limit, offset)
 	if err != nil {
 		http.Error(w, "{\"error\": \"server error\"}", http.StatusInternalServerError)
 		return

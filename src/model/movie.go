@@ -52,9 +52,9 @@ func (m *Movie) Get(id int64) error {
 	return nil
 }
 
-func (m *Movie) GetAll() ([]Movie, error) {
+func (m *Movie) GetAll(limit, offset int64) ([]Movie, error) {
 
-	rows, err := helper.App.DB.Query("SELECT id,name,description,typ FROM movie")
+	rows, err := helper.App.DB.Query("SELECT id,name,description,typ FROM movie order by id asc limit $1 offset $2", limit, offset)
 	if err != nil {
 		return nil, err
 	}
