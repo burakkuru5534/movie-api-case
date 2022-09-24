@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/burakkuru5534/src/api"
 	"github.com/burakkuru5534/src/api/sys"
+	"github.com/burakkuru5534/src/auth"
 	"github.com/burakkuru5534/src/helper"
 	"net/http"
 	"net/http/httptest"
@@ -92,7 +93,8 @@ func TestList(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-
+	helper.InitConf()
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -118,22 +120,15 @@ func TestCreate(t *testing.T) {
 	}
 
 	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
-	reqLogin, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStrForLogin))
+	reqLogin, err := http.NewRequest("POST", "/sys/login", bytes.NewBuffer(jsonStrForLogin))
 	if err != nil {
 		t.Fatal(err)
 	}
 	reqLogin.Header.Set("Content-Type", "application/json")
 
-	var jsonStr = []byte(`{"name":"MYTESTMOVIE","description":"desc","typ":"action"}`)
-
-	req, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStr))
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
 	rrLogin := httptest.NewRecorder()
 	handlerLogin := http.HandlerFunc(sys.Login)
-	handlerLogin.ServeHTTP(rrLogin, req)
+	handlerLogin.ServeHTTP(rrLogin, reqLogin)
 	var respStruct struct {
 		UserID       int64
 		UserName     string
@@ -150,6 +145,13 @@ func TestCreate(t *testing.T) {
 	// Create a Bearer string by appending string access token
 	var bearer = "Bearer " + respStruct.AccessToken
 	// add authorization header to the req
+	var jsonStr = []byte(`{"name":"MYTESTMOVIE","description":"desc","typ":"action"}`)
+	req, err := http.NewRequest("POST", "/api/movie", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", bearer)
 
 	rr := httptest.NewRecorder()
@@ -208,6 +210,8 @@ func TestCreate(t *testing.T) {
 
 func TestGet(t *testing.T) {
 
+	helper.InitConf()
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -232,12 +236,39 @@ func TestGet(t *testing.T) {
 		errors.New("init app error.")
 	}
 
+	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
+	reqLogin, err := http.NewRequest("POST", "/sys/login", bytes.NewBuffer(jsonStrForLogin))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqLogin.Header.Set("Content-Type", "application/json")
+
+	rrLogin := httptest.NewRecorder()
+	handlerLogin := http.HandlerFunc(sys.Login)
+	handlerLogin.ServeHTTP(rrLogin, reqLogin)
+	var respStruct struct {
+		UserID       int64
+		UserName     string
+		UserEmail    string
+		UserFullName string
+		AccessToken  string
+	}
+
+	err = json.Unmarshal(rrLogin.Body.Bytes(), &respStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a Bearer string by appending string access token
+	var bearer = "Bearer " + respStruct.AccessToken
+
 	req, err := http.NewRequest("GET", "/api/movie", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Add("Authorization", bearer)
 	q := req.URL.Query()
-	q.Add("id", "4")
+	q.Add("id", "27")
 	req.URL.RawQuery = q.Encode()
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.MovieGet)
@@ -276,7 +307,7 @@ func TestGet(t *testing.T) {
 				status, http.StatusOK)
 		}
 	} else {
-		expected := `{"id":4,"name":"The Lord Of The Rings","description":"desc","typ":"fantasy"}
+		expected := `{"id":27,"name":"MYTESTMOVIE","description":"desc","typ":"action"}
 `
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
@@ -289,6 +320,8 @@ func TestGet(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 
+	helper.InitConf()
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -313,12 +346,39 @@ func TestDelete(t *testing.T) {
 		errors.New("init app error.")
 	}
 
+	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
+	reqLogin, err := http.NewRequest("POST", "/sys/login", bytes.NewBuffer(jsonStrForLogin))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqLogin.Header.Set("Content-Type", "application/json")
+
+	rrLogin := httptest.NewRecorder()
+	handlerLogin := http.HandlerFunc(sys.Login)
+	handlerLogin.ServeHTTP(rrLogin, reqLogin)
+	var respStruct struct {
+		UserID       int64
+		UserName     string
+		UserEmail    string
+		UserFullName string
+		AccessToken  string
+	}
+
+	err = json.Unmarshal(rrLogin.Body.Bytes(), &respStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a Bearer string by appending string access token
+	var bearer = "Bearer " + respStruct.AccessToken
 	req, err := http.NewRequest("DELETE", "/api/movie", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Add("Authorization", bearer)
+
 	q := req.URL.Query()
-	q.Add("id", "4")
+	q.Add("id", "26")
 	req.URL.RawQuery = q.Encode()
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(api.MovieDelete)
@@ -371,6 +431,8 @@ func TestDelete(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 
+	helper.InitConf()
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
 	conInfo := helper.PgConnectionInfo{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -395,14 +457,40 @@ func TestUpdate(t *testing.T) {
 		errors.New("init app error.")
 	}
 
+	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
+	reqLogin, err := http.NewRequest("POST", "/sys/login", bytes.NewBuffer(jsonStrForLogin))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqLogin.Header.Set("Content-Type", "application/json")
+
+	rrLogin := httptest.NewRecorder()
+	handlerLogin := http.HandlerFunc(sys.Login)
+	handlerLogin.ServeHTTP(rrLogin, reqLogin)
+	var respStruct struct {
+		UserID       int64
+		UserName     string
+		UserEmail    string
+		UserFullName string
+		AccessToken  string
+	}
+
+	err = json.Unmarshal(rrLogin.Body.Bytes(), &respStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a Bearer string by appending string access token
+	var bearer = "Bearer " + respStruct.AccessToken
 	var jsonStr = []byte(`{"name":"TestMovieUpdatedName","description":"desc","typ":"fantasy"}`)
 
 	req, err := http.NewRequest("PATCH", "/api/movie", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Add("Authorization", bearer)
 	q := req.URL.Query()
-	q.Add("id", "4")
+	q.Add("id", "27")
 	req.URL.RawQuery = q.Encode()
 
 	req.Header.Set("Content-Type", "application/json")
@@ -443,7 +531,7 @@ func TestUpdate(t *testing.T) {
 				status, http.StatusOK)
 		}
 	} else {
-		expected := fmt.Sprintf(`{"name":"TestMovieUpdatedName","description":"desc","typ":"fantasy"}
+		expected := fmt.Sprintf(`{"id":27,"name":"TestMovieUpdatedName","description":"desc","typ":"fantasy"}
 `)
 		if rr.Body.String() != expected {
 			t.Errorf("handler returned unexpected body: got %v want %v",
