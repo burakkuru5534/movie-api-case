@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
 	"github.com/burakkuru5534/src/api"
 	"github.com/burakkuru5534/src/auth"
 	"github.com/burakkuru5534/src/helper"
 	"github.com/burakkuru5534/src/service"
 	_ "github.com/lib/pq"
+
+	"log"
 )
 
 func main() {
@@ -26,17 +27,17 @@ func main() {
 
 	db, err := helper.NewPgSqlxDbHandle(conInfo, 10)
 	if err != nil {
-		errors.New("create db handle error.")
+		log.Fatal("Error connecting to database: ", err)
 	}
 	err = db.Ping()
 	if err != nil {
-		errors.New("ping db error.")
+		log.Fatal("Error connecting to database: ", err)
 	}
 
 	// Create Appplication Service
 	err = helper.InitApp(db)
 	if err != nil {
-		errors.New("init app error.")
+		log.Fatal("Error initializing application: ", err)
 	}
 
 	service.StartHttpService(8080, api.HttpService())

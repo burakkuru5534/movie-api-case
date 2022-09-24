@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"log"
 )
 
 var (
@@ -20,6 +21,7 @@ func NewRegister(w http.ResponseWriter, r *http.Request) {
 
 	err := helper.BodyToJsonReq(r, &data)
 	if err != nil {
+		log.Println("Register body to json error: ", err)
 		http.Error(w, "{\"error\": \"server error\"}", http.StatusInternalServerError)
 		return
 	}
@@ -38,18 +40,21 @@ func NewRegister(w http.ResponseWriter, r *http.Request) {
 	validate = validator.New()
 	err = validate.Struct(data)
 	if err != nil {
+		log.Println("Register body validate error: ", err)
 		http.Error(w, "{\"error\": \"Bad request\"}", http.StatusBadRequest)
 		return
 	}
 
 	data.Password, err = helper.HashPasswd(data.Password)
 	if err != nil {
+		log.Println("hash password error: ", err)
 		http.Error(w, "{\"error\": \"server error\"}", http.StatusInternalServerError)
 		return
 	}
 
 	err = createSysUsr(data)
 	if err != nil {
+		log.Println("create sysusr error: ", err)
 		http.Error(w, "{\"error\": \"server error\"}", http.StatusInternalServerError)
 		return
 	}
