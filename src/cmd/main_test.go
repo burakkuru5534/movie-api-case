@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/burakkuru5534/src/api"
+	"github.com/burakkuru5534/src/api/register"
 	"github.com/burakkuru5534/src/api/sys"
 	"github.com/burakkuru5534/src/auth"
 	"github.com/burakkuru5534/src/helper"
@@ -13,6 +14,188 @@ import (
 	"net/http/httptest"
 	"testing"
 )
+
+func TestRegister(t *testing.T) {
+
+	helper.InitConf()
+	conInfo := helper.PgConnectionInfo{
+		Host:     "127.0.0.1",
+		Port:     5432,
+		Database: "soft-robotics",
+		Username: "postgres",
+		Password: "tayitkan",
+		SSLMode:  "disable",
+	}
+
+	db, err := helper.NewPgSqlxDbHandle(conInfo, 10)
+	if err != nil {
+		errors.New("create db handle error.")
+	}
+	err = db.Ping()
+	if err != nil {
+		errors.New("ping db error.")
+	}
+
+	// Create Appplication Service
+	err = helper.InitApp(db)
+	if err != nil {
+		errors.New("init app error.")
+	}
+
+	reqUserName := "Crazy"
+	ReqUserLastName := "Tom"
+
+	var jsonStrForRegister = []byte(fmt.Sprintf(`{"FirstName":"%s","MiddleName":"","LastName":"%s","Email":"testcrazytom@gmail.com","Password":"tomhanks123"}`, reqUserName, ReqUserLastName))
+	reqRegister, err := http.NewRequest("POST", "/sys/register", bytes.NewBuffer(jsonStrForRegister))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqRegister.Header.Set("Content-Type", "application/json")
+
+	rrRegister := httptest.NewRecorder()
+	handlerRegister := http.HandlerFunc(register.NewRegister)
+	handlerRegister.ServeHTTP(rrRegister, reqRegister)
+
+	if status := rrRegister.Code; status != http.StatusOK {
+		if status == http.StatusBadRequest {
+			expected := `{"error": "Bad request"}
+`
+			if rrRegister.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrRegister.Body.String(), expected)
+			}
+		} else if status == http.StatusForbidden {
+			expected := `{"error": "Movie with that email already exists"}
+`
+			if rrRegister.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrRegister.Body.String(), expected)
+			}
+		} else if status == http.StatusInternalServerError {
+			expected := `{"error": "Internal server error"}
+`
+			if rrRegister.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrRegister.Body.String(), expected)
+			}
+		} else if status == http.StatusNotFound {
+			expected := `{"error": "Movie with that id does not exist"}
+`
+			if rrRegister.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrRegister.Body.String(), expected)
+			}
+		} else {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	} else {
+		expected := fmt.Sprintf(`"User %s.%s created:"
+`, reqUserName, ReqUserLastName)
+		if rrRegister.Body.String() != expected {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				rrRegister.Body.String(), expected)
+		}
+	}
+	// Check the response body is what we expect.
+
+}
+
+func TestLogin(t *testing.T) {
+
+	helper.InitConf()
+	helper.Conf.Auth = auth.NewAuth("2GcQCe7SuKxbaA3NSMBy8ztBPbfDsXJ4", false)
+	conInfo := helper.PgConnectionInfo{
+		Host:     "127.0.0.1",
+		Port:     5432,
+		Database: "soft-robotics",
+		Username: "postgres",
+		Password: "tayitkan",
+		SSLMode:  "disable",
+	}
+
+	db, err := helper.NewPgSqlxDbHandle(conInfo, 10)
+	if err != nil {
+		errors.New("create db handle error.")
+	}
+	err = db.Ping()
+	if err != nil {
+		errors.New("ping db error.")
+	}
+
+	// Create Appplication Service
+	err = helper.InitApp(db)
+	if err != nil {
+		errors.New("init app error.")
+	}
+
+	var jsonStrForLogin = []byte(`{"username":"Burak.Kuru","password":"burakkuru123"}`)
+	reqLogin, err := http.NewRequest("POST", "/sys/login", bytes.NewBuffer(jsonStrForLogin))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqLogin.Header.Set("Content-Type", "application/json")
+
+	rrLogin := httptest.NewRecorder()
+	handlerLogin := http.HandlerFunc(sys.Login)
+	handlerLogin.ServeHTTP(rrLogin, reqLogin)
+	var respStruct struct {
+		UserID       int64
+		UserName     string
+		UserEmail    string
+		UserFullName string
+		AccessToken  string
+	}
+
+	err = json.Unmarshal(rrLogin.Body.Bytes(), &respStruct)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := rrLogin.Code; status != http.StatusOK {
+		if status == http.StatusBadRequest {
+			expected := `{"error": "Bad request"}
+`
+			if rrLogin.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrLogin.Body.String(), expected)
+			}
+		} else if status == http.StatusForbidden {
+			expected := `{"error": "Movie with that email already exists"}
+`
+			if rrLogin.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrLogin.Body.String(), expected)
+			}
+		} else if status == http.StatusInternalServerError {
+			expected := `{"error": "Internal server error"}
+`
+			if rrLogin.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrLogin.Body.String(), expected)
+			}
+		} else if status == http.StatusNotFound {
+			expected := `{"error": "Movie with that id does not exist"}
+`
+			if rrLogin.Body.String() != expected {
+				t.Errorf("handler returned unexpected body: got %v want %v",
+					rrLogin.Body.String(), expected)
+			}
+		} else {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, http.StatusOK)
+		}
+	} else {
+		expected := fmt.Sprintf(`{"UserID":6,"UserName":"Burak.Kuru","UserEmail":"brkkr5534@gmail.com","UserFullName":"Burak Kuru","AccessToken":"%s"}
+`, respStruct.AccessToken)
+		if rrLogin.Body.String() != expected {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				rrLogin.Body.String(), expected)
+		}
+	}
+	// Check the response body is what we expect.
+
+}
 
 func TestList(t *testing.T) {
 
