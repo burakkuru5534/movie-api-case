@@ -13,6 +13,8 @@ Technologies used in this project:
 
 Golang,
 postgresql
+docker
+kubernetes
 
 Test Environments:
 
@@ -330,6 +332,52 @@ you can run test by typing:
 
 go test -v
 
+### Docker & kubernetes
+
+#$ go build
+#$ ./movie-api-case
+
+#create Dockerfile
+#$ docker build -t movie-api-case .
+#$ docker tag go-kubernetes burakkuru5534/movie-api-case:1.0.0
+#$ docker login
+#$ docker push burakkuru5534/movie-api-case:1.0.0
+
+#create kubernetes deployment file (.yml)
+#$ minikube start
+#$ kubectl apply -f k8s-deployment.yml
+
+#$ kubectl get deployments
+#$ kubectl get pods
+#We can use the kubectl port-forward command to map a local port to a port inside the pod like this:
+#$ kubectl port-forward movie-api-case-69b45499fb-7fh87 8080:8080
+
+#$ kubectl logs -f movie-api-case-69b45499fb-7fh87
+
+#create kubernetes service
+#kubectl apply -f k8s-deployment.yml (we can update this yml or create another yml file)
+
+#$ kubectl get services
+
+#Type the following command to get the URL for the service in the minikube cluster:
+#$ minikube service movie-api-case-service --url
+
+#scale a kubernetes deployment
+
+#$ kubectl scale --replicas=4 deployment/movie-api-case
+
+#delete a kubernetes deployment
+
+#$ kubectl delete deployment movie-api-case
+
+#delete a kubernetes service
+
+#$ kubectl delete service movie-api-case-service
+
+#delete a pod
+
+#$ kubectl delete pod movie-api-case-69b45499fb-7fh87
+
 ## Conclusion
 
 We have successfully implemented the movie api service.
@@ -339,5 +387,7 @@ Used postgresql as the database language.
 Used golang testing library to test the apis.
 Used postman to test the apis.
 Used golang testing library also to test the apis.
+Used docker to containerize the application.
+Used kubernetes to deploy the application.
 
 
